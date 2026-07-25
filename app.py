@@ -410,6 +410,13 @@ def admin_order_status(oid):
     return redirect(url_for("admin_orders"))
 
 
+@app.route("/sw.js")
+def service_worker():
+    resp = app.send_static_file("sw.js")
+    resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)

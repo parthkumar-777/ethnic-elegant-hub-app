@@ -104,7 +104,7 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").catch(function(){});
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function(){});
     });
   }
 </script>
