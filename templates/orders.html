@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section">
+  <h2>My Orders</h2>
+  {% if orders %}
+    {% for o in orders %}
+    <div class="cart-summary" style="margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+        <div>
+          <b>Order #{{ o.order['id'] }}</b> · {{ o.order['created_at'] }}<br>
+          <span class="badge badge-{{ o.order['status']|lower }}">{{ o.order['status'] }}</span>
+        </div>
+        <div style="font-weight:700;">₹{{ o.order['total_amount']|int }}</div>
+      </div>
+      <hr>
+      {% for it in o.line_items %}
+      <p style="font-size:13px;">{{ it['product_name'] }} (Size: {{ it['size'] }}) × {{ it['quantity'] }} — ₹{{ it['price']|int }}</p>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <p style="color:#888;">You haven't placed any orders yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

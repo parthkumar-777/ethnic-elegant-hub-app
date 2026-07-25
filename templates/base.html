@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Ethnic Elegant Hub - Premium Women's Ethnic Wear{% endblock %}</title>
+<link rel="icon" href="{{ url_for('static', filename='logo.png') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- Welcome Popup -->
+<div class="welcome-overlay" id="welcomeOverlay" style="display:none;">
+  <div class="welcome-box">
+    <span class="welcome-close" id="welcomeClose">&times;</span>
+    <svg class="welcome-char" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="128" rx="34" ry="8" fill="#00000022"/>
+      <circle cx="60" cy="55" r="34" fill="#f7d9b6"/>
+      <path d="M28 50 Q30 15 60 15 Q90 15 92 50 Q75 38 60 40 Q45 38 28 50Z" fill="#6b1626"/>
+      <circle cx="47" cy="57" r="4" fill="#2c2c2c"/>
+      <circle cx="73" cy="57" r="4" fill="#2c2c2c"/>
+      <path d="M48 70 Q60 80 72 70" stroke="#8a4b2f" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="40" cy="66" r="5" fill="#e8a488" opacity="0.6"/>
+      <circle cx="80" cy="66" r="5" fill="#e8a488" opacity="0.6"/>
+      <path d="M35 92 Q60 78 85 92 L88 135 L32 135Z" fill="#c9a227"/>
+      <path d="M35 92 Q60 100 85 92" stroke="#6b1626" stroke-width="3" fill="none"/>
+      <circle cx="60" cy="20" r="5" fill="#e8c15a"/>
+    </svg>
+    <h3>Welcome thanks for visiting us</h3>
+    <p>Discover premium women's ethnic wear, curated just for you at Ethnic Elegant Hub.</p>
+    <button class="btn btn-primary" id="welcomeClose2" onclick="document.getElementById('welcomeOverlay').style.display='none'">Start Shopping</button>
+  </div>
+</div>
+
+<nav class="navbar">
+  <div class="container">
+    <a href="{{ url_for('index') }}" class="brand">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="logo">
+      <div class="brand-text">
+        <b>ETHNIC ELEGANT HUB</b>
+        <span>Grace in every drape</span>
+      </div>
+    </a>
+    <form class="search-bar" action="{{ url_for('search') }}" method="get">
+      <input type="text" name="q" placeholder="Search for sarees, kurtis, lehengas..." value="{{ request.args.get('q','') }}">
+      <button type="submit">🔍</button>
+    </form>
+    <div class="nav-links">
+      {% if current_user %}
+        {% if current_user['is_admin'] %}
+          <a href="{{ url_for('admin_dashboard') }}">⚙️ Admin</a>
+        {% endif %}
+        <a href="{{ url_for('my_orders') }}">📦 Orders</a>
+        <a href="{{ url_for('logout') }}">👤 {{ current_user['name'].split(' ')[0] }} | Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">👤 Login</a>
+      {% endif %}
+      <a href="{{ url_for('view_cart') }}">🛒 Cart{% if cart_count > 0 %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}</a>
+    </div>
+  </div>
+</nav>
+<div class="category-strip">
+  <div class="container">
+    {% for c in categories %}
+      <a href="{{ url_for('category', name=c) }}">{{ c }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="container">
+    <div>
+      <b>ETHNIC ELEGANT HUB</b><br>
+      Premium women's ethnic wear, delivered with elegance.
+    </div>
+    <div>
+      <b>Customer Care</b><br>
+      support@ethnicelegant.com<br>
+      Mon-Sat, 10am - 7pm
+    </div>
+    <div>
+      <b>Categories</b><br>
+      {% for c in categories[:4] %}{{ c }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

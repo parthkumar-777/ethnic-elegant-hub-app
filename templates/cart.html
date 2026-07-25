@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section">
+  <h2>Shopping Cart</h2>
+  {% if items %}
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:24px;">
+    <div>
+      {% for it in items %}
+      <div class="cart-item">
+        <img src="{{ url_for('static', filename='products/' ~ it.product['image']) }}" alt="">
+        <div style="flex:1;">
+          <h3 style="margin:0 0 6px;">{{ it.product['name'] }}</h3>
+          <p style="font-size:12px; color:#888; margin:0 0 6px;">Size: {{ it.size }}</p>
+          <p style="font-weight:700; color:var(--maroon); margin:0;">₹{{ it.product['price']|int }}</p>
+        </div>
+        <form method="post" action="{{ url_for('update_cart', pid=it.product['id']) }}" style="display:flex; align-items:center; gap:8px;">
+          <button name="action" value="decrease" class="btn btn-outline btn-sm" type="submit">−</button>
+          <span>{{ it.qty }}</span>
+          <button name="action" value="increase" class="btn btn-outline btn-sm" type="submit">+</button>
+        </form>
+        <form method="post" action="{{ url_for('update_cart', pid=it.product['id']) }}">
+          <button name="action" value="remove" class="btn btn-danger btn-sm" type="submit">Remove</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="cart-summary">
+      <h3 style="color:var(--maroon);">Order Summary</h3>
+      <p style="display:flex; justify-content:space-between;"><span>Subtotal</span><span>₹{{ total|int }}</span></p>
+      <p style="display:flex; justify-content:space-between;"><span>Delivery</span><span style="color:var(--success);">Free</span></p>
+      <hr>
+      <p style="display:flex; justify-content:space-between; font-weight:700; font-size:16px;"><span>Total</span><span>₹{{ total|int }}</span></p>
+      <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block">Proceed to Checkout</a>
+    </div>
+  </div>
+  {% else %}
+  <p style="color:#888;">Your cart is empty. <a href="{{ url_for('index') }}" style="color:var(--maroon); font-weight:600;">Start shopping</a></p>
+  {% endif %}
+</div>
+{% endblock %}

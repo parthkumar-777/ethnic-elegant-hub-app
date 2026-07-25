@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2 style="border:none; color:var(--maroon);">Admin Dashboard</h2>
+<div class="stat-cards">
+  <div class="stat-card"><div class="num">{{ n_products }}</div><div class="label">Total Products</div></div>
+  <div class="stat-card"><div class="num">{{ n_orders }}</div><div class="label">Total Orders</div></div>
+  <div class="stat-card"><div class="num">{{ n_users }}</div><div class="label">Registered Customers</div></div>
+  <div class="stat-card"><div class="num">₹{{ revenue|int }}</div><div class="label">Total Revenue</div></div>
+</div>
+
+<h3 style="color:var(--maroon);">Recent Orders</h3>
+<table>
+  <tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+  {% for o in recent_orders %}
+  <tr>
+    <td>#{{ o['id'] }}</td>
+    <td>{{ o['customer_name'] }}</td>
+    <td>₹{{ o['total_amount']|int }}</td>
+    <td><span class="badge badge-{{ o['status']|lower }}">{{ o['status'] }}</span></td>
+    <td>{{ o['created_at'] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<p style="margin-top:12px;"><a href="{{ url_for('admin_orders') }}" style="color:var(--maroon); font-weight:600;">View all orders →</a></p>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<div style="display:flex; justify-content:space-between; align-items:center;">
+  <h2 style="border:none; color:var(--maroon);">Products ({{ products|length }})</h2>
+  <a href="{{ url_for('admin_product_new') }}" class="btn btn-gold">+ Add Product</a>
+</div>
+<table>
+  <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th>Actions</th></tr>
+  {% for p in products %}
+  <tr>
+    <td><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" style="width:44px; height:56px; object-fit:cover; border-radius:4px;"></td>
+    <td>{{ p['name'] }}</td>
+    <td>{{ p['category'] }}</td>
+    <td>₹{{ p['price']|int }}</td>
+    <td>{{ p['stock'] }}</td>
+    <td>{{ '⭐' if p['is_featured'] else '—' }}</td>
+    <td>
+      <a href="{{ url_for('admin_product_edit', pid=p['id']) }}" class="btn btn-outline btn-sm">Edit</a>
+      <form method="post" action="{{ url_for('admin_product_delete', pid=p['id']) }}" style="display:inline;" onsubmit="return confirm('Delete this product?');">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

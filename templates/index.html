@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero">
+  <div class="container">
+    <h1>Elegance Woven Into Every Thread</h1>
+    <p>Premium sarees, lehengas, kurtas & more — crafted for the modern Indian woman</p>
+  </div>
+</div>
+
+{% if featured %}
+<div class="container section">
+  <h2>Featured Collection</h2>
+  <div class="grid">
+    {% for p in featured %}
+    <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
+      <div class="img-wrap"><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}"></div>
+      <div class="card-body">
+        <h3>{{ p['name'] }}</h3>
+        <span class="rating">{{ p['rating'] }} ★</span>
+        <div class="price-row">
+          <span class="price">₹{{ p['price']|int }}</span>
+          <span class="mrp">₹{{ p['mrp']|int }}</span>
+          <span class="discount">{{ ((1 - p['price']/p['mrp'])*100)|round|int }}% off</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="container section">
+  <h2>All Products</h2>
+  <div class="grid">
+    {% for p in products %}
+    <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
+      <div class="img-wrap"><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}"></div>
+      <div class="card-body">
+        <h3>{{ p['name'] }}</h3>
+        <span class="rating">{{ p['rating'] }} ★</span>
+        <div class="price-row">
+          <span class="price">₹{{ p['price']|int }}</span>
+          <span class="mrp">₹{{ p['mrp']|int }}</span>
+          <span class="discount">{{ ((1 - p['price']/p['mrp'])*100)|round|int }}% off</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
