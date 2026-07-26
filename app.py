@@ -252,6 +252,10 @@ def checkout():
                 VALUES (?,?,?,?,?,?)""",
                 (order_id, it["product"]["id"], it["product"]["name"], it["size"], it["qty"], it["product"]["price"]),
             )
+            conn.execute(
+                "UPDATE products SET stock = CASE WHEN stock - ? < 0 THEN 0 ELSE stock - ? END WHERE id=?",
+                (it["qty"], it["qty"], it["product"]["id"]),
+            )
         conn.commit()
         conn.close()
         session["cart"] = {}
