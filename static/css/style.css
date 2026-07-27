@@ -144,6 +144,7 @@ footer b{color:var(--gold-light);}
 .cart-item{display:flex; gap:14px; background:#fff; padding:14px; border-radius:8px; margin-bottom:12px; border:1px solid #eee; align-items:center;}
 .cart-item img{width:80px; height:100px; object-fit:cover; border-radius:6px;}
 .cart-summary{background:#fff; padding:20px; border-radius:8px; border:1px solid #eee; height:fit-content;}
+.two-col-layout{display:grid; grid-template-columns:2fr 1fr; gap:24px;}
 
 /* ---------- Admin ---------- */
 .admin-layout{display:grid; grid-template-columns:220px 1fr; min-height:80vh;}
@@ -169,4 +170,18 @@ table th{background:var(--cream-dark); color:var(--maroon);}
   .admin-layout{grid-template-columns:1fr;}
   .navbar .container{flex-wrap:wrap;}
   .search-bar{order:3; width:100%;}
+  .two-col-layout{grid-template-columns:1fr;}
+  .grid{grid-template-columns:repeat(2, 1fr); gap:10px;}
+  .card-body{padding:8px;}
+  .card-body h3{font-size:12px; height:32px; margin-bottom:4px;}
+  .price{font-size:14px;}
+  .mrp{font-size:10px;}
+  .discount{font-size:10px;}
+  .rating{font-size:10px;}
+  .section{padding:20px 0;}
+  .section h2{font-size:18px;}
+  .hero{padding:30px 0;}
+  .hero h1{font-size:22px;}
+  .hero p{font-size:13px;}
+  .cart-item{flex-wrap:wrap;}
 }

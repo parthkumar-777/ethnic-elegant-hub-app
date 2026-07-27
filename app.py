@@ -297,18 +297,27 @@ def my_orders():
 @app.route("/admin")
 @admin_required
 def admin_dashboard():
+    from datetime import date, timedelta
+    today_start = date.today().isoformat()
+    tomorrow_start = (date.today() + timedelta(days=1)).isoformat()
+
     conn = get_db()
     n_products = conn.execute("SELECT COUNT(*) n FROM products").fetchone()["n"]
     n_orders = conn.execute("SELECT COUNT(*) n FROM orders").fetchone()["n"]
     n_users = conn.execute("SELECT COUNT(*) n FROM users WHERE is_admin=0").fetchone()["n"]
     revenue = conn.execute("SELECT COALESCE(SUM(total_amount),0) r FROM orders").fetchone()["r"]
+    today_revenue = conn.execute(
+        "SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE created_at >= ? AND created_at < ?",
+        (today_start, tomorrow_start),
+    ).fetchone()["r"]
     recent_orders = conn.execute(
         """SELECT orders.*, users.name as customer_name FROM orders
         JOIN users ON users.id = orders.user_id ORDER BY orders.created_at DESC LIMIT 8"""
     ).fetchall()
     conn.close()
     return render_template("admin/dashboard.html", n_products=n_products, n_orders=n_orders,
-                            n_users=n_users, revenue=revenue, recent_orders=recent_orders)
+                            n_users=n_users, revenue=revenue, today_revenue=today_revenue,
+                            recent_orders=recent_orders)
 
 
 @app.route("/admin/products")
