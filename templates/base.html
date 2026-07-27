@@ -48,18 +48,6 @@
       <input type="text" name="q" placeholder="Search for sarees, kurtis, lehengas..." value="{{ request.args.get('q','') }}">
       <button type="submit">🔍</button>
     </form>
-    <div class="nav-links">
-      {% if current_user %}
-        {% if current_user['is_admin'] %}
-          <a href="{{ url_for('admin_dashboard') }}">⚙️ Admin</a>
-        {% endif %}
-        <a href="{{ url_for('my_orders') }}">📦 Orders</a>
-        <a href="{{ url_for('logout') }}">👤 {{ current_user['name'].split(' ')[0] }} | Logout</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">👤 Login</a>
-      {% endif %}
-      <a href="{{ url_for('view_cart') }}">🛒 Cart{% if cart_count > 0 %}<span class="cart-badge">{{ cart_count }}</span>{% endif %}</a>
-    </div>
   </div>
 </nav>
 <div class="category-strip">
@@ -99,6 +87,21 @@
     </div>
   </div>
 </footer>
+
+<nav class="bottom-nav">
+  <a href="{{ url_for('index') }}" class="bottom-nav-item {{ 'active' if request.endpoint=='index' }}">
+    <span class="icon">🏠</span><span>Home</span>
+  </a>
+  <a href="{{ url_for('categories_page') }}" class="bottom-nav-item {{ 'active' if request.endpoint=='categories_page' }}">
+    <span class="icon">▦</span><span>Categories</span>
+  </a>
+  <a href="{{ url_for('account') if current_user else url_for('login') }}" class="bottom-nav-item {{ 'active' if request.endpoint in ['account','login','signup'] }}">
+    <span class="icon">👤</span><span>Account</span>
+  </a>
+  <a href="{{ url_for('view_cart') }}" class="bottom-nav-item {{ 'active' if request.endpoint=='view_cart' }}">
+    <span class="icon">🛒{% if cart_count > 0 %}<span class="cart-badge-bottom">{{ cart_count }}</span>{% endif %}</span><span>Cart</span>
+  </a>
+</nav>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>

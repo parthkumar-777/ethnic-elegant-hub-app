@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section">
+  <h2>My Account</h2>
+  <div class="cart-summary" style="max-width:480px;">
+    <p style="font-size:16px; font-weight:700; color:var(--maroon); margin-bottom:4px;">{{ current_user['name'] }}</p>
+    <p style="font-size:13px; color:#777; margin-bottom:2px;">{{ current_user['email'] }}</p>
+    {% if current_user['phone'] %}<p style="font-size:13px; color:#777; margin-bottom:16px;">{{ current_user['phone'] }}</p>{% endif %}
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+      <a href="{{ url_for('my_orders') }}" class="btn btn-outline">📦 My Orders</a>
+      {% if current_user['is_admin'] %}
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">⚙️ Admin Dashboard</a>
+      {% endif %}
+      <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -116,6 +116,17 @@ def product_detail(pid):
     return render_template("product.html", p=product, related=related)
 
 
+@app.route("/categories")
+def categories_page():
+    return render_template("categories.html")
+
+
+@app.route("/account")
+@login_required
+def account():
+    return render_template("account.html")
+
+
 # ---------- auth ----------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():

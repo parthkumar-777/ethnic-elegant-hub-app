@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section">
+  <h2>Shop by Category</h2>
+  <div class="grid">
+    {% for c in categories %}
+    <a href="{{ url_for('category', name=c) }}" class="card">
+      <div class="img-wrap" style="aspect-ratio:1.6/1; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--maroon), var(--charcoal));">
+        <span style="color:var(--gold-light); font-family:Georgia, serif; font-size:16px; text-align:center; padding:10px;">{{ c }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
