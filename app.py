@@ -11,6 +11,21 @@ app.secret_key = "eeh-dev-secret-change-in-production-please"
 UPLOAD_FOLDER = os.path.join(app.static_folder, "products")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+@app.template_filter("fmtdate")
+def fmt_date(value):
+    if not value:
+        return ""
+    from datetime import datetime
+    if isinstance(value, str):
+        try:
+            dt = datetime.strptime(value.split(".")[0], "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            return value
+    else:
+        dt = value
+    return dt.strftime("%d %b %Y, %I:%M %p")
+
+
 CATEGORIES = ["Sarees", "Kurta Sets", "Lehenga Choli", "Salwar Suits",
               "Gowns", "Dupattas", "Ethnic Jackets"]
 
@@ -316,9 +331,9 @@ def admin_dashboard():
     n_products = conn.execute("SELECT COUNT(*) n FROM products").fetchone()["n"]
     n_orders = conn.execute("SELECT COUNT(*) n FROM orders").fetchone()["n"]
     n_users = conn.execute("SELECT COUNT(*) n FROM users WHERE is_admin=0").fetchone()["n"]
-    revenue = conn.execute("SELECT COALESCE(SUM(total_amount),0) r FROM orders").fetchone()["r"]
+    revenue = conn.execute("SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE status='Delivered'").fetchone()["r"]
     today_revenue = conn.execute(
-        "SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE created_at >= ? AND created_at < ?",
+        "SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE status='Delivered' AND created_at >= ? AND created_at < ?",
         (today_start, tomorrow_start),
     ).fetchone()["r"]
     recent_orders = conn.execute(
