@@ -205,6 +205,18 @@ def init_db():
     conn.executescript(SCHEMA_PG if USE_PG else SCHEMA_SQLITE)
     conn.commit()
 
+    # migration: add delivered_at column if it doesn't already exist (tracks when an
+    # order's status was actually set to Delivered, so "today's revenue" reflects the
+    # delivery date rather than the order's original placement date)
+    try:
+        if USE_PG:
+            conn.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP")
+        else:
+            conn.execute("ALTER TABLE orders ADD COLUMN delivered_at TEXT")
+        conn.commit()
+    except Exception:
+        pass
+
     admin = conn.execute("SELECT * FROM users WHERE is_admin=1").fetchone()
     if not admin:
         from werkzeug.security import generate_password_hash

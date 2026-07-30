@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
                     session, flash, jsonify, abort)
@@ -333,7 +334,7 @@ def admin_dashboard():
     n_users = conn.execute("SELECT COUNT(*) n FROM users WHERE is_admin=0").fetchone()["n"]
     revenue = conn.execute("SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE status='Delivered'").fetchone()["r"]
     today_revenue = conn.execute(
-        "SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE status='Delivered' AND created_at >= ? AND created_at < ?",
+        "SELECT COALESCE(SUM(total_amount),0) r FROM orders WHERE status='Delivered' AND delivered_at >= ? AND delivered_at < ?",
         (today_start, tomorrow_start),
     ).fetchone()["r"]
     recent_orders = conn.execute(
@@ -443,7 +444,15 @@ def admin_orders():
 def admin_order_status(oid):
     status = request.form["status"]
     conn = get_db()
-    conn.execute("UPDATE orders SET status=? WHERE id=?", (status, oid))
+    if status == "Delivered":
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute(
+            "UPDATE orders SET status=?, delivered_at=? WHERE id=? AND delivered_at IS NULL",
+            (status, now_str, oid),
+        )
+        conn.execute("UPDATE orders SET status=? WHERE id=?", (status, oid))
+    else:
+        conn.execute("UPDATE orders SET status=?, delivered_at=NULL WHERE id=?", (status, oid))
     conn.commit()
     conn.close()
     return redirect(url_for("admin_orders"))
