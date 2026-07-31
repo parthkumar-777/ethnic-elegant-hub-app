@@ -180,6 +180,30 @@ def change_password():
     return render_template("change_password.html")
 
 
+@app.route("/account/change-email", methods=["GET", "POST"])
+@login_required
+def change_email():
+    if request.method == "POST":
+        new_email = request.form["new_email"].strip().lower()
+        current_pw = request.form["current_password"]
+        user = current_user()
+        if not check_password_hash(user["password_hash"], current_pw):
+            flash("Current password is incorrect.", "danger")
+            return redirect(url_for("change_email"))
+        conn = get_db()
+        existing = conn.execute("SELECT id FROM users WHERE email=? AND id<>?", (new_email, user["id"])).fetchone()
+        if existing:
+            flash("This email is already in use by another account.", "danger")
+            conn.close()
+            return redirect(url_for("change_email"))
+        conn.execute("UPDATE users SET email=? WHERE id=?", (new_email, user["id"]))
+        conn.commit()
+        conn.close()
+        flash("Email updated successfully. Please use your new email next time you log in.", "success")
+        return redirect(url_for("account"))
+    return render_template("change_email.html")
+
+
 # ---------- auth ----------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
