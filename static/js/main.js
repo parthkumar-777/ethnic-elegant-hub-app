@@ -19,6 +19,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // password show/hide eye toggle
+  document.querySelectorAll(".toggle-password").forEach(function (icon) {
+    icon.addEventListener("click", function () {
+      var target = document.getElementById(icon.getAttribute("data-target"));
+      if (!target) return;
+      if (target.type === "password") {
+        target.type = "text";
+        icon.textContent = "🙈";
+      } else {
+        target.type = "password";
+        icon.textContent = "👁️";
+      }
+    });
+  });
+
   // quantity selector on product page
   var qtyInput = document.getElementById("qtyInput");
   var qtyMinus = document.getElementById("qtyMinus");

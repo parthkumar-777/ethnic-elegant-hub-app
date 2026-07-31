@@ -98,6 +98,10 @@ img{max-width:100%; display:block;}
   width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:5px; font-size:14px; outline:none;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{border-color:var(--gold);}
+.password-wrap{position:relative; display:flex; align-items:center;}
+.password-wrap input{padding-right:40px;}
+.toggle-password{position:absolute; right:12px; cursor:pointer; font-size:16px; opacity:.6; user-select:none;}
+.toggle-password:hover{opacity:1;}
 
 /* ---------- Flash ---------- */
 .flash{padding:10px 16px; border-radius:5px; margin:12px 0; font-size:14px;}
