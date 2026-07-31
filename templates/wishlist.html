@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section">
+  <h2>My Wishlist</h2>
+  {% if products %}
+  <div class="grid">
+    {% for p in products %}
+    <div class="card">
+      <a href="{{ url_for('product_detail', pid=p['id']) }}">
+        <div class="img-wrap"><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}"></div>
+        <div class="card-body">
+          <h3>{{ p['name'] }}</h3>
+          <span class="rating">{{ p['rating'] }} ★</span>
+          <div class="price-row">
+            <span class="price">₹{{ p['price']|int }}</span>
+            <span class="mrp">₹{{ p['mrp']|int }}</span>
+          </div>
+        </div>
+      </a>
+      <form action="{{ url_for('wishlist_remove', pid=p['id']) }}" method="post" style="padding:0 8px 10px;">
+        <button type="submit" class="btn btn-outline btn-sm btn-block">💔 Remove</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color:#888;">Your wishlist is empty. <a href="{{ url_for('index') }}" style="color:var(--maroon); font-weight:600;">Browse products</a></p>
+  {% endif %}
+</div>
+{% endblock %}

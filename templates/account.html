@@ -9,6 +9,7 @@
 
     <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
       <a href="{{ url_for('my_orders') }}" class="btn btn-outline">📦 My Orders</a>
+      <a href="{{ url_for('wishlist') }}" class="btn btn-outline">❤️ My Wishlist</a>
       <a href="{{ url_for('change_password') }}" class="btn btn-outline">🔒 Change Password</a>
       <a href="{{ url_for('change_email') }}" class="btn btn-outline">✉️ Change Email</a>
       {% if current_user['is_admin'] %}

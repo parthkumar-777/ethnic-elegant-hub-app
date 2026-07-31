@@ -146,6 +146,36 @@ SCHEMA_SQLITE = """
         FOREIGN KEY (order_id) REFERENCES orders(id),
         FOREIGN KEY (product_id) REFERENCES products(id)
     );
+
+    CREATE TABLE IF NOT EXISTS reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (product_id) REFERENCES products(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS wishlist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (product_id) REFERENCES products(id),
+        UNIQUE(user_id, product_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS coupons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT UNIQUE NOT NULL,
+        discount_percent REAL NOT NULL,
+        min_order_amount REAL DEFAULT 0,
+        active INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
 """
 
 SCHEMA_PG = """
@@ -197,7 +227,44 @@ SCHEMA_PG = """
         quantity INTEGER NOT NULL,
         price REAL NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS reviews (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL REFERENCES products(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        rating INTEGER NOT NULL,
+        comment TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS wishlist (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        product_id INTEGER NOT NULL REFERENCES products(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, product_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS coupons (
+        id SERIAL PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL,
+        discount_percent REAL NOT NULL,
+        min_order_amount REAL DEFAULT 0,
+        active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
 """
+
+
+def _safe_add_column(conn, table, col_sqlite, col_pg):
+    try:
+        if USE_PG:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_pg}")
+        else:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col_sqlite}")
+        conn.commit()
+    except Exception:
+        pass
 
 
 def init_db():
@@ -208,14 +275,10 @@ def init_db():
     # migration: add delivered_at column if it doesn't already exist (tracks when an
     # order's status was actually set to Delivered, so "today's revenue" reflects the
     # delivery date rather than the order's original placement date)
-    try:
-        if USE_PG:
-            conn.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP")
-        else:
-            conn.execute("ALTER TABLE orders ADD COLUMN delivered_at TEXT")
-        conn.commit()
-    except Exception:
-        pass
+    _safe_add_column(conn, "orders", "delivered_at TEXT", "delivered_at TIMESTAMP")
+    # migration: coupon tracking on orders
+    _safe_add_column(conn, "orders", "coupon_code TEXT", "coupon_code TEXT")
+    _safe_add_column(conn, "orders", "discount_amount REAL DEFAULT 0", "discount_amount REAL DEFAULT 0")
 
     admin = conn.execute("SELECT * FROM users WHERE is_admin=1").fetchone()
     if not admin:

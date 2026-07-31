@@ -24,7 +24,10 @@
       <p style="display:flex; justify-content:space-between; font-size:13px;"><span>{{ it.product['name'] }} × {{ it.qty }}</span><span>₹{{ it.subtotal|int }}</span></p>
       {% endfor %}
       <hr>
-      <p style="display:flex; justify-content:space-between; font-weight:700;"><span>Total</span><span>₹{{ total|int }}</span></p>
+      {% if coupon %}
+      <p style="display:flex; justify-content:space-between; font-size:13px; color:var(--success);"><span>Coupon "{{ coupon.code }}"</span><span>-₹{{ discount|int }}</span></p>
+      {% endif %}
+      <p style="display:flex; justify-content:space-between; font-weight:700;"><span>Total</span><span>₹{{ final_total|int }}</span></p>
     </div>
   </div>
 </div>

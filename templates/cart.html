@@ -27,9 +27,24 @@
     <div class="cart-summary">
       <h3 style="color:var(--maroon);">Order Summary</h3>
       <p style="display:flex; justify-content:space-between;"><span>Subtotal</span><span>₹{{ total|int }}</span></p>
+      {% if coupon %}
+      <p style="display:flex; justify-content:space-between; color:var(--success);"><span>Coupon "{{ coupon.code }}" (-{{ coupon.discount_percent|int }}%)</span><span>-₹{{ discount|int }}</span></p>
+      {% endif %}
       <p style="display:flex; justify-content:space-between;"><span>Delivery</span><span style="color:var(--success);">Free</span></p>
       <hr>
-      <p style="display:flex; justify-content:space-between; font-weight:700; font-size:16px;"><span>Total</span><span>₹{{ total|int }}</span></p>
+      <p style="display:flex; justify-content:space-between; font-weight:700; font-size:16px;"><span>Total</span><span>₹{{ final_total|int }}</span></p>
+
+      {% if coupon %}
+      <form method="post" action="{{ url_for('remove_coupon') }}" style="margin-bottom:12px;">
+        <button type="submit" class="btn btn-outline btn-sm btn-block">Remove Coupon</button>
+      </form>
+      {% else %}
+      <form method="post" action="{{ url_for('apply_coupon') }}" style="display:flex; gap:6px; margin-bottom:12px;">
+        <input type="text" name="coupon_code" placeholder="Coupon code" style="flex:1; padding:8px 10px; border:1px solid #ccc; border-radius:5px; text-transform:uppercase;">
+        <button type="submit" class="btn btn-outline btn-sm">Apply</button>
+      </form>
+      {% endif %}
+
       <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block">Proceed to Checkout</a>
     </div>
   </div>

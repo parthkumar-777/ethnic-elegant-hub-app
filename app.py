@@ -136,8 +136,79 @@ def product_detail(pid):
         "SELECT * FROM products WHERE category=? AND id<>? LIMIT 4",
         (product["category"], pid),
     ).fetchall()
+    reviews = conn.execute(
+        """SELECT reviews.*, users.name as reviewer_name FROM reviews
+        JOIN users ON users.id = reviews.user_id
+        WHERE product_id=? ORDER BY reviews.created_at DESC""",
+        (pid,),
+    ).fetchall()
+    review_count = len(reviews)
+    avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count else None
+    in_wishlist = False
+    if session.get("user_id"):
+        w = conn.execute(
+            "SELECT id FROM wishlist WHERE user_id=? AND product_id=?", (session["user_id"], pid)
+        ).fetchone()
+        in_wishlist = bool(w)
     conn.close()
-    return render_template("product.html", p=product, related=related)
+    return render_template("product.html", p=product, related=related, reviews=reviews,
+                            review_count=review_count, avg_rating=avg_rating, in_wishlist=in_wishlist)
+
+
+@app.route("/product/<int:pid>/review", methods=["POST"])
+@login_required
+def add_review(pid):
+    rating = int(request.form["rating"])
+    comment = request.form.get("comment", "").strip()
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?,?,?,?)",
+        (pid, session["user_id"], rating, comment),
+    )
+    conn.commit()
+    conn.close()
+    flash("Thank you for your review!", "success")
+    return redirect(url_for("product_detail", pid=pid))
+
+
+# ---------- wishlist ----------
+@app.route("/wishlist")
+@login_required
+def wishlist():
+    conn = get_db()
+    products = conn.execute(
+        """SELECT products.* FROM wishlist JOIN products ON products.id = wishlist.product_id
+        WHERE wishlist.user_id=? ORDER BY wishlist.created_at DESC""",
+        (session["user_id"],),
+    ).fetchall()
+    conn.close()
+    return render_template("wishlist.html", products=products)
+
+
+@app.route("/wishlist/add/<int:pid>", methods=["POST"])
+@login_required
+def wishlist_add(pid):
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM wishlist WHERE user_id=? AND product_id=?", (session["user_id"], pid)
+    ).fetchone()
+    if not existing:
+        conn.execute("INSERT INTO wishlist (user_id, product_id) VALUES (?,?)", (session["user_id"], pid))
+        conn.commit()
+    conn.close()
+    flash("Added to wishlist.", "success")
+    return redirect(request.referrer or url_for("index"))
+
+
+@app.route("/wishlist/remove/<int:pid>", methods=["POST"])
+@login_required
+def wishlist_remove(pid):
+    conn = get_db()
+    conn.execute("DELETE FROM wishlist WHERE user_id=? AND product_id=?", (session["user_id"], pid))
+    conn.commit()
+    conn.close()
+    flash("Removed from wishlist.", "info")
+    return redirect(request.referrer or url_for("wishlist"))
 
 
 @app.route("/categories")
@@ -258,6 +329,20 @@ def logout():
 
 
 # ---------- cart & checkout ----------
+def get_applied_coupon():
+    return session.get("coupon")
+
+
+def compute_discount(total):
+    coupon = get_applied_coupon()
+    if not coupon:
+        return 0, None
+    if total < coupon.get("min_order_amount", 0):
+        return 0, None
+    discount = round(total * coupon["discount_percent"] / 100, 2)
+    return discount, coupon
+
+
 @app.route("/cart")
 def view_cart():
     cart = get_cart()
@@ -271,7 +356,36 @@ def view_cart():
             total += subtotal
             items.append({"product": p, "qty": info["qty"], "size": info["size"], "subtotal": subtotal})
     conn.close()
-    return render_template("cart.html", items=items, total=total)
+    discount, coupon = compute_discount(total)
+    return render_template("cart.html", items=items, total=total, discount=discount,
+                            coupon=coupon, final_total=total - discount)
+
+
+@app.route("/cart/apply-coupon", methods=["POST"])
+def apply_coupon():
+    code = request.form.get("coupon_code", "").strip().upper()
+    conn = get_db()
+    c = conn.execute("SELECT * FROM coupons WHERE code=? AND active=1", (code,)).fetchone()
+    conn.close()
+    if not c:
+        flash("Invalid or inactive coupon code.", "danger")
+        return redirect(url_for("view_cart"))
+    session["coupon"] = {
+        "code": c["code"],
+        "discount_percent": c["discount_percent"],
+        "min_order_amount": c["min_order_amount"],
+    }
+    session.modified = True
+    flash(f"Coupon '{c['code']}' applied!", "success")
+    return redirect(url_for("view_cart"))
+
+
+@app.route("/cart/remove-coupon", methods=["POST"])
+def remove_coupon():
+    session.pop("coupon", None)
+    session.modified = True
+    flash("Coupon removed.", "info")
+    return redirect(url_for("view_cart"))
 
 
 @app.route("/cart/add/<int:pid>", methods=["POST"])
@@ -326,12 +440,16 @@ def checkout():
             total += subtotal
             items.append({"product": p, "qty": info["qty"], "size": info["size"], "subtotal": subtotal})
 
+    discount, coupon = compute_discount(total)
+    final_total = total - discount
+
     if request.method == "POST":
         address = request.form["address"]
         payment_method = request.form.get("payment_method", "COD")
         cur = conn.execute(
-            "INSERT INTO orders (user_id, total_amount, address, payment_method) VALUES (?,?,?,?)",
-            (session["user_id"], total, address, payment_method),
+            "INSERT INTO orders (user_id, total_amount, address, payment_method, coupon_code, discount_amount) VALUES (?,?,?,?,?,?)",
+            (session["user_id"], final_total, address, payment_method,
+             coupon["code"] if coupon else None, discount),
         )
         order_id = cur.lastrowid
         for it in items:
@@ -347,12 +465,14 @@ def checkout():
         conn.commit()
         conn.close()
         session["cart"] = {}
+        session.pop("coupon", None)
         session.modified = True
         return redirect(url_for("order_success", order_id=order_id))
 
     conn.close()
     user = current_user()
-    return render_template("checkout.html", items=items, total=total, user=user)
+    return render_template("checkout.html", items=items, total=total, user=user,
+                            discount=discount, coupon=coupon, final_total=final_total)
 
 
 @app.route("/order-success/<int:order_id>")
@@ -517,6 +637,60 @@ def admin_order_status(oid):
     conn.commit()
     conn.close()
     return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/coupons")
+@admin_required
+def admin_coupons():
+    conn = get_db()
+    coupons = conn.execute("SELECT * FROM coupons ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return render_template("admin/coupons.html", coupons=coupons)
+
+
+@app.route("/admin/coupons/new", methods=["POST"])
+@admin_required
+def admin_coupon_new():
+    code = request.form["code"].strip().upper()
+    discount = float(request.form["discount_percent"])
+    min_amount = float(request.form.get("min_order_amount") or 0)
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM coupons WHERE code=?", (code,)).fetchone()
+    if existing:
+        flash("A coupon with this code already exists.", "danger")
+    else:
+        conn.execute(
+            "INSERT INTO coupons (code, discount_percent, min_order_amount) VALUES (?,?,?)",
+            (code, discount, min_amount),
+        )
+        conn.commit()
+        flash("Coupon created.", "success")
+    conn.close()
+    return redirect(url_for("admin_coupons"))
+
+
+@app.route("/admin/coupons/<int:cid>/toggle", methods=["POST"])
+@admin_required
+def admin_coupon_toggle(cid):
+    conn = get_db()
+    c = conn.execute("SELECT active FROM coupons WHERE id=?", (cid,)).fetchone()
+    if c:
+        new_active = 0 if c["active"] else 1
+        conn.execute("UPDATE coupons SET active=? WHERE id=?", (new_active, cid))
+        conn.commit()
+    conn.close()
+    return redirect(url_for("admin_coupons"))
+
+
+@app.route("/admin/coupons/<int:cid>/delete", methods=["POST"])
+@admin_required
+def admin_coupon_delete(cid):
+    conn = get_db()
+    conn.execute("DELETE FROM coupons WHERE id=?", (cid,))
+    conn.commit()
+    conn.close()
+    flash("Coupon deleted.", "info")
+    return redirect(url_for("admin_coupons"))
 
 
 @app.route("/sw.js")
