@@ -108,13 +108,21 @@ def category(name):
 @app.route("/search")
 def search():
     q = request.args.get("q", "").strip()
+    sort = request.args.get("sort", "")
     conn = get_db()
-    products = conn.execute(
-        "SELECT * FROM products WHERE name LIKE ? OR category LIKE ? OR fabric LIKE ?",
-        (f"%{q}%", f"%{q}%", f"%{q}%"),
-    ).fetchall()
+    query = "SELECT * FROM products WHERE LOWER(name) LIKE LOWER(?) OR LOWER(category) LIKE LOWER(?) OR LOWER(fabric) LIKE LOWER(?)"
+    if sort == "price_low":
+        query += " ORDER BY price ASC"
+    elif sort == "price_high":
+        query += " ORDER BY price DESC"
+    elif sort == "rating":
+        query += " ORDER BY rating DESC"
+    else:
+        query += " ORDER BY created_at DESC"
+    like_q = f"%{q}%"
+    products = conn.execute(query, (like_q, like_q, like_q)).fetchall()
     conn.close()
-    return render_template("category.html", products=products, category=f'Results for "{q}"', sort="")
+    return render_template("category.html", products=products, category=f'Results for "{q}"', sort=sort)
 
 
 @app.route("/product/<int:pid>")
