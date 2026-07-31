@@ -151,6 +151,35 @@ def account():
     return render_template("account.html")
 
 
+@app.route("/account/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        current_pw = request.form["current_password"]
+        new_pw = request.form["new_password"]
+        confirm_pw = request.form["confirm_password"]
+        user = current_user()
+        if not check_password_hash(user["password_hash"], current_pw):
+            flash("Current password is incorrect.", "danger")
+            return redirect(url_for("change_password"))
+        if len(new_pw) < 6:
+            flash("New password must be at least 6 characters.", "danger")
+            return redirect(url_for("change_password"))
+        if new_pw != confirm_pw:
+            flash("New password and confirm password do not match.", "danger")
+            return redirect(url_for("change_password"))
+        conn = get_db()
+        conn.execute(
+            "UPDATE users SET password_hash=? WHERE id=?",
+            (generate_password_hash(new_pw), user["id"]),
+        )
+        conn.commit()
+        conn.close()
+        flash("Password changed successfully.", "success")
+        return redirect(url_for("account"))
+    return render_template("change_password.html")
+
+
 # ---------- auth ----------
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
