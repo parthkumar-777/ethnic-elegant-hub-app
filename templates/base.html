@@ -82,6 +82,11 @@
       Mon-Sat, 10am - 7pm
     </div>
     <div>
+      <b>Company</b><br>
+      <a href="{{ url_for('about') }}" style="color:#ccc;">About Us</a><br>
+      <a href="{{ url_for('contact') }}" style="color:#ccc;">Contact Us</a>
+    </div>
+    <div>
       <b>Categories</b><br>
       {% for c in categories[:4] %}{{ c }}{% if not loop.last %} · {% endif %}{% endfor %}
     </div>

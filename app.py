@@ -1,4 +1,6 @@
 import os
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
 from functools import wraps
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -11,6 +13,48 @@ app = Flask(__name__)
 app.secret_key = "eeh-dev-secret-change-in-production-please"
 UPLOAD_FOLDER = os.path.join(app.static_folder, "products")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "").strip()
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
+
+
+def send_email(to_email, subject, html_body):
+    """Best-effort email send. Silently does nothing if SMTP isn't configured,
+    so local dev / missing credentials never break checkout."""
+    if not SMTP_EMAIL or not SMTP_PASSWORD or not to_email:
+        return False
+    try:
+        msg = MIMEText(html_body, "html")
+        msg["Subject"] = subject
+        msg["From"] = SMTP_EMAIL
+        msg["To"] = to_email
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Email send failed: {e}")
+        return False
+
+
+def build_order_email_html(order_id, items, final_total, address, payment_method):
+    rows = "".join(
+        f"<tr><td style='padding:6px 10px;'>{it['product']['name']} (Size: {it['size']}) × {it['qty']}</td>"
+        f"<td style='padding:6px 10px; text-align:right;'>₹{int(it['subtotal'])}</td></tr>"
+        for it in items
+    )
+    return f"""
+    <div style="font-family:Arial, sans-serif; max-width:520px; margin:0 auto;">
+      <h2 style="color:#6b1626;">Thank you for your order!</h2>
+      <p>Your order <b>#{order_id}</b> has been placed successfully.</p>
+      <table style="width:100%; border-collapse:collapse; margin:16px 0;">{rows}</table>
+      <p style="font-weight:bold; font-size:16px;">Total: ₹{int(final_total)}</p>
+      <p><b>Payment Method:</b> {payment_method}</p>
+      <p><b>Delivery Address:</b><br>{address}</p>
+      <p style="color:#888; font-size:12px; margin-top:24px;">Ethnic Elegant Hub — Grace in every drape</p>
+    </div>
+    """
+
 
 @app.template_filter("fmtdate")
 def fmt_date(value):
@@ -467,6 +511,19 @@ def checkout():
         session["cart"] = {}
         session.pop("coupon", None)
         session.modified = True
+
+        # best-effort order confirmation email (never blocks checkout on failure)
+        try:
+            user_for_email = current_user()
+            if user_for_email and user_for_email["email"]:
+                send_email(
+                    user_for_email["email"],
+                    f"Order Confirmed #{order_id} - Ethnic Elegant Hub",
+                    build_order_email_html(order_id, items, final_total, address, payment_method),
+                )
+        except Exception as e:
+            print(f"Order email skipped: {e}")
+
         return redirect(url_for("order_success", order_id=order_id))
 
     conn.close()
@@ -496,9 +553,70 @@ def my_orders():
     orders_with_items = []
     for o in orders:
         items = conn.execute("SELECT * FROM order_items WHERE order_id=?", (o["id"],)).fetchall()
-        orders_with_items.append({"order": o, "line_items": items})
+        return_req = conn.execute(
+            "SELECT * FROM return_requests WHERE order_id=? ORDER BY id DESC LIMIT 1", (o["id"],)
+        ).fetchone()
+        orders_with_items.append({"order": o, "line_items": items, "return_request": return_req})
     conn.close()
     return render_template("orders.html", orders=orders_with_items)
+
+
+@app.route("/orders/<int:order_id>/return-request", methods=["POST"])
+@login_required
+def request_return(order_id):
+    reason = request.form.get("reason", "").strip()
+    conn = get_db()
+    order = conn.execute("SELECT * FROM orders WHERE id=? AND user_id=?", (order_id, session["user_id"])).fetchone()
+    if not order:
+        conn.close()
+        abort(404)
+    if order["status"] != "Delivered":
+        flash("Return can only be requested for delivered orders.", "warning")
+        conn.close()
+        return redirect(url_for("my_orders"))
+    existing = conn.execute("SELECT id FROM return_requests WHERE order_id=?", (order_id,)).fetchone()
+    if existing:
+        flash("A return request already exists for this order.", "warning")
+        conn.close()
+        return redirect(url_for("my_orders"))
+    if not reason:
+        flash("Please provide a reason for the return.", "warning")
+        conn.close()
+        return redirect(url_for("my_orders"))
+    conn.execute(
+        "INSERT INTO return_requests (order_id, user_id, reason) VALUES (?,?,?)",
+        (order_id, session["user_id"], reason),
+    )
+    conn.commit()
+    conn.close()
+    flash("Return request submitted. Our team will review it shortly.", "success")
+    return redirect(url_for("my_orders"))
+
+
+# ---------- static pages ----------
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        message = request.form.get("message", "").strip()
+        if name and email and message:
+            conn = get_db()
+            conn.execute(
+                "INSERT INTO contact_messages (name, email, message) VALUES (?,?,?)",
+                (name, email, message),
+            )
+            conn.commit()
+            conn.close()
+            flash("Thanks for reaching out! We'll get back to you soon.", "success")
+            return redirect(url_for("contact"))
+        flash("Please fill in all fields.", "warning")
+    return render_template("contact.html")
 
 
 # ---------- admin ----------
@@ -691,6 +809,44 @@ def admin_coupon_delete(cid):
     conn.close()
     flash("Coupon deleted.", "info")
     return redirect(url_for("admin_coupons"))
+
+
+@app.route("/admin/returns")
+@admin_required
+def admin_returns():
+    conn = get_db()
+    returns = conn.execute(
+        """SELECT return_requests.*, users.name as customer_name, orders.total_amount
+        FROM return_requests
+        JOIN users ON users.id = return_requests.user_id
+        JOIN orders ON orders.id = return_requests.order_id
+        ORDER BY return_requests.created_at DESC"""
+    ).fetchall()
+    conn.close()
+    return render_template("admin/returns.html", returns=returns)
+
+
+@app.route("/admin/returns/<int:rid>/status", methods=["POST"])
+@admin_required
+def admin_return_status(rid):
+    status = request.form["status"]
+    conn = get_db()
+    conn.execute("UPDATE return_requests SET status=? WHERE id=?", (status, rid))
+    conn.commit()
+    conn.close()
+    flash("Return request updated.", "success")
+    return redirect(url_for("admin_returns"))
+
+
+@app.route("/admin/messages")
+@admin_required
+def admin_messages():
+    conn = get_db()
+    messages = conn.execute("SELECT * FROM contact_messages ORDER BY created_at DESC").fetchall()
+    conn.execute("UPDATE contact_messages SET is_read=1")
+    conn.commit()
+    conn.close()
+    return render_template("admin/messages.html", messages=messages)
 
 
 @app.route("/sw.js")

@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2 style="border:none; color:var(--maroon);">Return Requests ({{ returns|length }})</h2>
+{% if returns %}
+  {% for r in returns %}
+  <div class="cart-summary" style="margin-bottom:14px;">
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; align-items:center;">
+      <div>
+        <b>Order #{{ r['order_id'] }}</b> · {{ r['customer_name'] }}<br>
+        <span style="font-size:12px; color:#888;">{{ r['created_at']|fmtdate }} · Order total: ₹{{ r['total_amount']|int }}</span><br>
+        <p style="font-size:13px; margin-top:6px;"><b>Reason:</b> {{ r['reason'] }}</p>
+      </div>
+      <div>
+        <form method="post" action="{{ url_for('admin_return_status', rid=r['id']) }}">
+          <select name="status" onchange="this.form.submit()">
+            {% for st in ['Requested','Approved','Rejected','Refunded'] %}
+            <option value="{{ st }}" {% if r['status']==st %}selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+<p style="color:#888;">No return requests yet.</p>
+{% endif %}
+{% endblock %}

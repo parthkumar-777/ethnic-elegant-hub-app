@@ -176,6 +176,26 @@ SCHEMA_SQLITE = """
         active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS return_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        status TEXT DEFAULT 'Requested',
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS contact_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
 """
 
 SCHEMA_PG = """
@@ -251,6 +271,24 @@ SCHEMA_PG = """
         discount_percent REAL NOT NULL,
         min_order_amount REAL DEFAULT 0,
         active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS return_requests (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES orders(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        reason TEXT NOT NULL,
+        status TEXT DEFAULT 'Requested',
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS contact_messages (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
     );
 """
