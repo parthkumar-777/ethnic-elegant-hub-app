@@ -7,7 +7,10 @@
     {% for p in products %}
     <div class="card">
       <a href="{{ url_for('product_detail', pid=p['id']) }}">
-        <div class="img-wrap"><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}"></div>
+        <div class="img-wrap" style="position:relative;">
+          <img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}">
+          {% if p['stock'] <= 0 %}<span style="position:absolute; top:8px; left:8px; background:var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px;">Out of Stock</span>{% endif %}
+        </div>
         <div class="card-body">
           <h3>{{ p['name'] }}</h3>
           <span class="rating">{{ p['rating'] }} ★</span>

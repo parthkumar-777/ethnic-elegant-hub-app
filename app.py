@@ -438,6 +438,14 @@ def add_to_cart(pid):
     size = request.form.get("size", "M")
     qty = int(request.form.get("qty", 1))
     action = request.form.get("action", "cart")
+
+    conn = get_db()
+    product = conn.execute("SELECT stock FROM products WHERE id=?", (pid,)).fetchone()
+    conn.close()
+    if not product or product["stock"] <= 0:
+        flash("Sorry, this product is out of stock.", "danger")
+        return redirect(request.referrer or url_for("index"))
+
     cart = get_cart()
     key = str(pid)
     if key in cart:

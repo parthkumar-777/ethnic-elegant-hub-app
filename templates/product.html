@@ -17,23 +17,27 @@
       <p style="color:#555; line-height:1.6;">{{ p['description'] }}</p>
       <p style="font-size:13px; color:#777;"><b>Fabric:</b> {{ p['fabric'] }} &nbsp; | &nbsp; <b>Color:</b> {{ p['color'] }}</p>
 
+      {% if p['stock'] <= 0 %}
+      <p style="margin:14px 0; padding:8px 14px; background:#fdeceb; color:var(--danger); border-radius:5px; font-weight:600; display:inline-block;">Out of Stock</p>
+      {% endif %}
+
       <form action="{{ url_for('add_to_cart', pid=p['id']) }}" method="post">
         <div>
           <label style="font-weight:600; font-size:13px;">Select Size</label>
           <div class="size-options">
             {% for s in p['sizes'].split(',') %}
-            <label><input type="radio" name="size" value="{{ s }}" {% if loop.first %}checked{% endif %}><span>{{ s }}</span></label>
+            <label><input type="radio" name="size" value="{{ s }}" {% if loop.first %}checked{% endif %} {% if p['stock'] <= 0 %}disabled{% endif %}><span>{{ s }}</span></label>
             {% endfor %}
           </div>
         </div>
         <div class="qty-selector">
-          <button type="button" id="qtyMinus">−</button>
-          <input type="number" id="qtyInput" name="qty" value="1" min="1" style="width:50px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;">
-          <button type="button" id="qtyPlus">+</button>
+          <button type="button" id="qtyMinus" {% if p['stock'] <= 0 %}disabled{% endif %}>−</button>
+          <input type="number" id="qtyInput" name="qty" value="1" min="1" {% if p['stock'] <= 0 %}disabled{% endif %} style="width:50px; text-align:center; padding:6px; border:1px solid #ccc; border-radius:4px;">
+          <button type="button" id="qtyPlus" {% if p['stock'] <= 0 %}disabled{% endif %}>+</button>
         </div>
         <div style="display:flex; gap:12px; margin-top:16px;">
-          <button type="submit" name="action" value="cart" class="btn btn-gold">Add to Cart</button>
-          <button type="submit" name="action" value="buy" class="btn btn-primary">Buy Now</button>
+          <button type="submit" name="action" value="cart" class="btn btn-gold" {% if p['stock'] <= 0 %}disabled{% endif %}>{{ 'Out of Stock' if p['stock'] <= 0 else 'Add to Cart' }}</button>
+          <button type="submit" name="action" value="buy" class="btn btn-primary" {% if p['stock'] <= 0 %}disabled{% endif %}>{{ 'Out of Stock' if p['stock'] <= 0 else 'Buy Now' }}</button>
         </div>
       </form>
       {% if current_user %}
