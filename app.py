@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime
 from functools import wraps
+from collections import defaultdict
 from flask import (Flask, render_template, request, redirect, url_for,
                     session, flash, jsonify, abort)
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -644,6 +645,46 @@ def admin_dashboard():
     return render_template("admin/dashboard.html", n_products=n_products, n_orders=n_orders,
                             n_users=n_users, revenue=revenue, today_revenue=today_revenue,
                             recent_orders=recent_orders)
+
+
+@app.route("/admin/analytics")
+@admin_required
+def admin_analytics():
+    conn = get_db()
+    best_sellers = conn.execute(
+        """SELECT products.id, products.name, products.image, SUM(order_items.quantity) as total_qty
+        FROM order_items
+        JOIN orders ON orders.id = order_items.order_id
+        JOIN products ON products.id = order_items.product_id
+        WHERE orders.status <> 'Cancelled'
+        GROUP BY products.id, products.name, products.image
+        ORDER BY total_qty DESC
+        LIMIT 5"""
+    ).fetchall()
+
+    delivered = conn.execute(
+        "SELECT total_amount, delivered_at FROM orders WHERE status='Delivered' AND delivered_at IS NOT NULL"
+    ).fetchall()
+    conn.close()
+
+    monthly = defaultdict(float)
+    for o in delivered:
+        d = o["delivered_at"]
+        if isinstance(d, str):
+            try:
+                d = datetime.strptime(d.split(".")[0], "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                continue
+        sort_key = d.strftime("%Y-%m")
+        label = d.strftime("%b %Y")
+        monthly[(sort_key, label)] += o["total_amount"]
+
+    sorted_months = sorted(monthly.items(), key=lambda x: x[0][0])[-6:]
+    month_labels = [m[0][1] for m in sorted_months]
+    month_values = [round(m[1], 2) for m in sorted_months]
+
+    return render_template("admin/analytics.html", best_sellers=best_sellers,
+                            month_labels=month_labels, month_values=month_values)
 
 
 @app.route("/admin/products")
