@@ -671,13 +671,13 @@ def admin_analytics():
     ).fetchall()
 
     delivered = conn.execute(
-        "SELECT total_amount, delivered_at FROM orders WHERE status='Delivered' AND delivered_at IS NOT NULL"
+        "SELECT total_amount, delivered_at, created_at FROM orders WHERE status='Delivered'"
     ).fetchall()
     conn.close()
 
     monthly = defaultdict(float)
     for o in delivered:
-        d = o["delivered_at"]
+        d = o["delivered_at"] or o["created_at"]
         if isinstance(d, str):
             try:
                 d = datetime.strptime(d.split(".")[0], "%Y-%m-%d %H:%M:%S")

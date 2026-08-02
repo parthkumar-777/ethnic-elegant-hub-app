@@ -20,16 +20,37 @@
 
 <h3 style="color:var(--maroon); margin-top:28px;">📈 Monthly Revenue (Delivered Orders)</h3>
 {% if month_values %}
-{% set max_val = month_values|max %}
-<div style="display:flex; align-items:flex-end; gap:16px; background:#fff; padding:24px 20px 12px; border-radius:8px; border:1px solid #eee; min-height:220px;">
-  {% for label in month_labels %}
-  <div style="display:flex; flex-direction:column; align-items:center; flex:1;">
-    <div style="font-size:11px; color:var(--maroon); font-weight:700; margin-bottom:4px;">₹{{ month_values[loop.index0]|int }}</div>
-    <div style="width:100%; max-width:60px; background:linear-gradient(180deg, var(--gold), var(--maroon)); border-radius:4px 4px 0 0; height:{{ ((month_values[loop.index0] / max_val * 140)|int) if max_val > 0 else 0 }}px;"></div>
-    <div style="font-size:11px; color:#777; margin-top:6px; white-space:nowrap;">{{ label }}</div>
-  </div>
-  {% endfor %}
+<div style="background:#fff; padding:20px; border-radius:8px; border:1px solid #eee;">
+  <canvas id="revenueChart" height="90"></canvas>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ month_labels|tojson }},
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: {{ month_values|tojson }},
+        fill: true,
+        backgroundColor: 'rgba(107, 22, 38, 0.12)',
+        borderColor: '#6b1626',
+        pointBackgroundColor: '#c9a227',
+        pointBorderColor: '#6b1626',
+        pointRadius: 5,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '₹' + v } }
+      }
+    }
+  });
+</script>
 {% else %}
 <p style="color:#888;">No revenue data yet — revenue appears here once orders are marked "Delivered".</p>
 {% endif %}
