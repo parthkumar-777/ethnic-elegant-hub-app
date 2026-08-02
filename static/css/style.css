@@ -46,6 +46,16 @@ img{max-width:100%; display:block;}
 .category-strip a{color:#f0e6c8; font-size:13px; white-space:nowrap; font-weight:500;}
 .category-strip a:hover{color:var(--gold-light);}
 
+/* ---------- Banner Carousel ---------- */
+.banner-carousel{position:relative; overflow:hidden; background:var(--charcoal);}
+.banner-track{display:flex; transition:transform .5s ease;}
+.banner-slide{flex:0 0 100%; position:relative; display:block;}
+.banner-slide img{width:100%; height:auto; max-height:340px; object-fit:cover; display:block;}
+.banner-title{position:absolute; left:24px; bottom:20px; color:#fff; font-family:'Georgia', serif; font-size:20px; text-shadow:0 2px 8px rgba(0,0,0,.6); font-weight:700;}
+.banner-dots{position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px;}
+.banner-dot{width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.5); cursor:pointer;}
+.banner-dot.active{background:var(--gold);}
+
 /* ---------- Hero ---------- */
 .hero{
   background:linear-gradient(120deg, var(--maroon) 0%, var(--maroon-dark) 60%, var(--charcoal) 100%);

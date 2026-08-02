@@ -19,6 +19,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // banner carousel auto-rotate
+  var bannerTrack = document.getElementById("bannerTrack");
+  if (bannerTrack) {
+    var slides = bannerTrack.querySelectorAll(".banner-slide");
+    var dots = document.querySelectorAll(".banner-dot");
+    var current = 0;
+    function showSlide(i) {
+      current = i;
+      bannerTrack.style.transform = "translateX(-" + (i * 100) + "%)";
+      dots.forEach(function (d, idx) { d.classList.toggle("active", idx === i); });
+    }
+    dots.forEach(function (d, idx) {
+      d.addEventListener("click", function () { showSlide(idx); });
+    });
+    if (slides.length > 1) {
+      setInterval(function () {
+        showSlide((current + 1) % slides.length);
+      }, 4000);
+    }
+  }
+
   // password show/hide eye toggle
   document.querySelectorAll(".toggle-password").forEach(function (icon) {
     icon.addEventListener("click", function () {

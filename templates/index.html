@@ -1,11 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
+{% if banners %}
+<div class="banner-carousel">
+  <div class="banner-track" id="bannerTrack">
+    {% for b in banners %}
+    <a href="{{ b['link_url'] or '#' }}" class="banner-slide">
+      <img src="{{ url_for('static', filename='banners/' ~ b['image']) }}" alt="{{ b['title'] or 'Banner' }}">
+      {% if b['title'] %}<div class="banner-title">{{ b['title'] }}</div>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% if banners|length > 1 %}
+  <div class="banner-dots" id="bannerDots">
+    {% for b in banners %}<span class="banner-dot {{ 'active' if loop.first }}"></span>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
 <div class="hero">
   <div class="container">
     <h1>Elegance Woven Into Every Thread</h1>
     <p>Premium sarees, lehengas, kurtas & more — crafted for the modern Indian woman</p>
   </div>
 </div>
+{% endif %}
 
 {% if featured %}
 <div class="container section">

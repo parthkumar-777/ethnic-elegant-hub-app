@@ -196,6 +196,16 @@ SCHEMA_SQLITE = """
         is_read INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS banners (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        image TEXT NOT NULL,
+        link_url TEXT,
+        title TEXT,
+        active INTEGER DEFAULT 1,
+        sort_order INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+    );
 """
 
 SCHEMA_PG = """
@@ -291,6 +301,16 @@ SCHEMA_PG = """
         is_read INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS banners (
+        id SERIAL PRIMARY KEY,
+        image TEXT NOT NULL,
+        link_url TEXT,
+        title TEXT,
+        active INTEGER DEFAULT 1,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
 """
 
 
@@ -317,6 +337,8 @@ def init_db():
     # migration: coupon tracking on orders
     _safe_add_column(conn, "orders", "coupon_code TEXT", "coupon_code TEXT")
     _safe_add_column(conn, "orders", "discount_amount REAL DEFAULT 0", "discount_amount REAL DEFAULT 0")
+    # migration: allow customers to attach a photo with their review
+    _safe_add_column(conn, "reviews", "image TEXT", "image TEXT")
 
     admin = conn.execute("SELECT * FROM users WHERE is_admin=1").fetchone()
     if not admin:

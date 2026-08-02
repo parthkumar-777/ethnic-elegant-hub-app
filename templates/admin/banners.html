@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<h2 style="border:none; color:var(--maroon);">Homepage Banners</h2>
+
+<form method="post" action="{{ url_for('admin_banner_new') }}" enctype="multipart/form-data" style="max-width:520px; background:#fff; padding:20px; border-radius:8px; border:1px solid #eee; margin-bottom:24px;">
+  <div class="form-group">
+    <label>Banner Image</label>
+    <input type="file" name="image_file" accept="image/*" required>
+  </div>
+  <div class="form-group">
+    <label>Title (optional)</label>
+    <input type="text" name="title" placeholder="Festive Sale - Up to 50% Off">
+  </div>
+  <div class="form-group">
+    <label>Link URL (optional, e.g. /category/Sarees)</label>
+    <input type="text" name="link_url" placeholder="/category/Sarees">
+  </div>
+  <div class="form-group">
+    <label>Sort Order (lower shows first)</label>
+    <input type="number" name="sort_order" value="0">
+  </div>
+  <button type="submit" class="btn btn-gold">+ Add Banner</button>
+</form>
+
+<div class="grid">
+  {% for b in banners %}
+  <div class="card">
+    <div class="img-wrap"><img src="{{ url_for('static', filename='banners/' ~ b['image']) }}"></div>
+    <div class="card-body">
+      <h3>{{ b['title'] or '(no title)' }}</h3>
+      <p style="font-size:11px; color:#888;">{{ b['link_url'] or 'No link' }}</p>
+      <span class="badge {{ 'badge-delivered' if b['active'] else 'badge-cancelled' }}">{{ 'Active' if b['active'] else 'Inactive' }}</span>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <form method="post" action="{{ url_for('admin_banner_toggle', bid=b['id']) }}">
+          <button type="submit" class="btn btn-outline btn-sm">{{ 'Deactivate' if b['active'] else 'Activate' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_banner_delete', bid=b['id']) }}" onsubmit="return confirm('Delete this banner?');">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p style="color:#888;">No banners added yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

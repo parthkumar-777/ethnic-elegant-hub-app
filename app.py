@@ -14,6 +14,10 @@ app = Flask(__name__)
 app.secret_key = "eeh-dev-secret-change-in-production-please"
 UPLOAD_FOLDER = os.path.join(app.static_folder, "products")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+BANNER_FOLDER = os.path.join(app.static_folder, "banners")
+REVIEW_FOLDER = os.path.join(app.static_folder, "reviews")
+os.makedirs(BANNER_FOLDER, exist_ok=True)
+os.makedirs(REVIEW_FOLDER, exist_ok=True)
 
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
@@ -126,10 +130,11 @@ def inject_globals():
 @app.route("/")
 def index():
     conn = get_db()
+    banners = conn.execute("SELECT * FROM banners WHERE active=1 ORDER BY sort_order ASC, id DESC").fetchall()
     featured = conn.execute("SELECT * FROM products WHERE is_featured=1").fetchall()
     all_products = conn.execute("SELECT * FROM products ORDER BY created_at DESC").fetchall()
     conn.close()
-    return render_template("index.html", featured=featured, products=all_products)
+    return render_template("index.html", banners=banners, featured=featured, products=all_products)
 
 
 @app.route("/category/<name>")
@@ -205,10 +210,17 @@ def product_detail(pid):
 def add_review(pid):
     rating = int(request.form["rating"])
     comment = request.form.get("comment", "").strip()
+    image_name = None
+    file = request.files.get("review_image")
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        filename = f"r{pid}_{session['user_id']}_{int(datetime.now().timestamp())}_{filename}"
+        file.save(os.path.join(REVIEW_FOLDER, filename))
+        image_name = filename
     conn = get_db()
     conn.execute(
-        "INSERT INTO reviews (product_id, user_id, rating, comment) VALUES (?,?,?,?)",
-        (pid, session["user_id"], rating, comment),
+        "INSERT INTO reviews (product_id, user_id, rating, comment, image) VALUES (?,?,?,?,?)",
+        (pid, session["user_id"], rating, comment, image_name),
     )
     conn.commit()
     conn.close()
@@ -858,6 +870,62 @@ def admin_coupon_delete(cid):
     conn.close()
     flash("Coupon deleted.", "info")
     return redirect(url_for("admin_coupons"))
+
+
+@app.route("/admin/banners")
+@admin_required
+def admin_banners():
+    conn = get_db()
+    banners = conn.execute("SELECT * FROM banners ORDER BY sort_order ASC, id DESC").fetchall()
+    conn.close()
+    return render_template("admin/banners.html", banners=banners)
+
+
+@app.route("/admin/banners/new", methods=["POST"])
+@admin_required
+def admin_banner_new():
+    title = request.form.get("title", "").strip()
+    link_url = request.form.get("link_url", "").strip()
+    sort_order = int(request.form.get("sort_order", 0) or 0)
+    file = request.files.get("image_file")
+    if not file or not file.filename:
+        flash("Please choose a banner image.", "danger")
+        return redirect(url_for("admin_banners"))
+    filename = secure_filename(file.filename)
+    filename = f"{int(datetime.now().timestamp())}_{filename}"
+    file.save(os.path.join(BANNER_FOLDER, filename))
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO banners (image, link_url, title, sort_order) VALUES (?,?,?,?)",
+        (filename, link_url, title, sort_order),
+    )
+    conn.commit()
+    conn.close()
+    flash("Banner added.", "success")
+    return redirect(url_for("admin_banners"))
+
+
+@app.route("/admin/banners/<int:bid>/toggle", methods=["POST"])
+@admin_required
+def admin_banner_toggle(bid):
+    conn = get_db()
+    b = conn.execute("SELECT active FROM banners WHERE id=?", (bid,)).fetchone()
+    if b:
+        conn.execute("UPDATE banners SET active=? WHERE id=?", (0 if b["active"] else 1, bid))
+        conn.commit()
+    conn.close()
+    return redirect(url_for("admin_banners"))
+
+
+@app.route("/admin/banners/<int:bid>/delete", methods=["POST"])
+@admin_required
+def admin_banner_delete(bid):
+    conn = get_db()
+    conn.execute("DELETE FROM banners WHERE id=?", (bid,))
+    conn.commit()
+    conn.close()
+    flash("Banner deleted.", "info")
+    return redirect(url_for("admin_banners"))
 
 
 @app.route("/admin/returns")
