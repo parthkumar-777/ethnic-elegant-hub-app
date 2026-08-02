@@ -1,22 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Welcome popup - show once per browser using localStorage
-  var overlay = document.getElementById("welcomeOverlay");
-  if (overlay) {
-    if (!localStorage.getItem("eeh_welcomed")) {
-      overlay.style.display = "flex";
-      localStorage.setItem("eeh_welcomed", "1");
+  // App-style splash screen - shows once per browser session (like an app launch),
+  // not on every internal page click, then auto-hides
+  var splash = document.getElementById("splashScreen");
+  if (splash) {
+    if (sessionStorage.getItem("eeh_splash_shown")) {
+      splash.style.display = "none";
     } else {
-      overlay.style.display = "none";
+      sessionStorage.setItem("eeh_splash_shown", "1");
+      setTimeout(function () {
+        splash.classList.add("hide");
+      }, 1300);
     }
-    var closeBtn = document.getElementById("welcomeClose");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", function () {
-        overlay.style.display = "none";
-      });
-    }
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) overlay.style.display = "none";
-    });
   }
 
   // banner carousel auto-rotate

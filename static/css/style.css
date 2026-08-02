@@ -125,23 +125,24 @@ footer{background:var(--charcoal); color:#ccc; padding:30px 0; margin-top:40px; 
 footer .container{display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;}
 footer b{color:var(--gold-light);}
 
-/* ---------- Welcome Popup ---------- */
-.welcome-overlay{
-  position:fixed; inset:0; background:rgba(20,10,10,.75); display:flex; align-items:center;
-  justify-content:center; z-index:999; backdrop-filter:blur(2px);
+/* ---------- Splash Screen ---------- */
+.splash-screen{
+  position:fixed; inset:0; background:var(--cream); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; z-index:999; gap:28px;
+  transition:opacity .4s ease, visibility .4s ease;
 }
-.welcome-box{
-  background:linear-gradient(160deg, #fff 0%, var(--cream-dark) 100%);
-  border-radius:16px; padding:34px 30px; max-width:340px; text-align:center; position:relative;
-  border:2px solid var(--gold); box-shadow:0 20px 60px rgba(0,0,0,.4);
-  animation:popIn .45s cubic-bezier(.2,1.4,.4,1);
+.splash-screen.hide{opacity:0; visibility:hidden; pointer-events:none;}
+.splash-logo{
+  width:120px; height:120px; border-radius:50%; object-fit:cover;
+  border:3px solid var(--gold); box-shadow:0 8px 24px rgba(107,22,38,.2);
+  animation:splashPop .5s cubic-bezier(.2,1.4,.4,1);
 }
-@keyframes popIn{from{transform:scale(.7); opacity:0;} to{transform:scale(1); opacity:1;}}
-.welcome-char{width:110px; margin:0 auto 14px; animation:bounce 1.6s ease-in-out infinite;}
-@keyframes bounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);}}
-.welcome-box h3{color:var(--maroon); font-family:'Georgia', serif; margin:6px 0;}
-.welcome-box p{color:#555; font-size:14px; margin-bottom:18px;}
-.welcome-close{position:absolute; top:10px; right:14px; cursor:pointer; font-size:18px; color:#999;}
+@keyframes splashPop{from{transform:scale(.6); opacity:0;} to{transform:scale(1); opacity:1;}}
+.splash-dots{display:flex; gap:10px;}
+.splash-dot{width:12px; height:12px; border-radius:50%; animation:splashBounce 1s ease-in-out infinite;}
+.splash-dot:nth-child(2){animation-delay:.15s;}
+.splash-dot:nth-child(3){animation-delay:.3s;}
+@keyframes splashBounce{0%,80%,100%{transform:translateY(0); opacity:.5;} 40%{transform:translateY(-10px); opacity:1;}}
 
 /* ---------- Product detail ---------- */
 .product-detail{display:grid; grid-template-columns:1fr 1.2fr; gap:36px; padding:30px 0;}

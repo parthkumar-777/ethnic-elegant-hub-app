@@ -12,26 +12,13 @@
 </head>
 <body>
 
-<!-- Welcome Popup -->
-<div class="welcome-overlay" id="welcomeOverlay" style="display:none;">
-  <div class="welcome-box">
-    <span class="welcome-close" id="welcomeClose">&times;</span>
-    <svg class="welcome-char" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="60" cy="128" rx="34" ry="8" fill="#00000022"/>
-      <circle cx="60" cy="55" r="34" fill="#f7d9b6"/>
-      <path d="M28 50 Q30 15 60 15 Q90 15 92 50 Q75 38 60 40 Q45 38 28 50Z" fill="#6b1626"/>
-      <circle cx="47" cy="57" r="4" fill="#2c2c2c"/>
-      <circle cx="73" cy="57" r="4" fill="#2c2c2c"/>
-      <path d="M48 70 Q60 80 72 70" stroke="#8a4b2f" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <circle cx="40" cy="66" r="5" fill="#e8a488" opacity="0.6"/>
-      <circle cx="80" cy="66" r="5" fill="#e8a488" opacity="0.6"/>
-      <path d="M35 92 Q60 78 85 92 L88 135 L32 135Z" fill="#c9a227"/>
-      <path d="M35 92 Q60 100 85 92" stroke="#6b1626" stroke-width="3" fill="none"/>
-      <circle cx="60" cy="20" r="5" fill="#e8c15a"/>
-    </svg>
-    <h3>Welcome thanks for visiting us</h3>
-    <p>Discover premium women's ethnic wear, curated just for you at Ethnic Elegant Hub.</p>
-    <button class="btn btn-primary" id="welcomeClose2" onclick="document.getElementById('welcomeOverlay').style.display='none'">Start Shopping</button>
+<!-- Splash Screen -->
+<div class="splash-screen" id="splashScreen">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Ethnic Elegant Hub" class="splash-logo">
+  <div class="splash-dots">
+    <span class="splash-dot" style="background:#c9a227;"></span>
+    <span class="splash-dot" style="background:#6b1626;"></span>
+    <span class="splash-dot" style="background:#2c2c2c;"></span>
   </div>
 </div>
 
