@@ -7,7 +7,7 @@
     <div>
       {% for it in items %}
       <div class="cart-item">
-        <img src="{{ url_for('static', filename='products/' ~ it.product['image']) }}" alt="">
+        <img src="{{ img_url(it.product['image'], 'products') }}" alt="">
         <div style="flex:1;">
           <h3 style="margin:0 0 6px;">{{ it.product['name'] }}</h3>
           <p style="font-size:12px; color:#888; margin:0 0 6px;">Size: {{ it.size }}</p>

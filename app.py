@@ -19,6 +19,37 @@ REVIEW_FOLDER = os.path.join(app.static_folder, "reviews")
 os.makedirs(BANNER_FOLDER, exist_ok=True)
 os.makedirs(REVIEW_FOLDER, exist_ok=True)
 
+# Render's free plan wipes the local disk on every restart/spin-down, so any image
+# uploaded through the admin panel (banners, new products, review photos) would
+# vanish. If CLOUDINARY_URL is configured, uploads go there instead (persists
+# forever); otherwise they fall back to local disk (fine for local dev, but won't
+# survive a Render restart).
+CLOUDINARY_CONFIGURED = bool(os.environ.get("CLOUDINARY_URL", "").strip())
+if CLOUDINARY_CONFIGURED:
+    import cloudinary
+    import cloudinary.uploader
+
+
+def save_uploaded_image(file, subfolder, local_folder):
+    """Returns a value to store in the DB: a full Cloudinary URL if configured,
+    otherwise a local filename (existing behavior)."""
+    if CLOUDINARY_CONFIGURED:
+        result = cloudinary.uploader.upload(file, folder=f"ethnic-elegant-hub/{subfolder}")
+        return result["secure_url"]
+    filename = secure_filename(file.filename)
+    filename = f"{int(datetime.now().timestamp())}_{filename}"
+    file.save(os.path.join(local_folder, filename))
+    return filename
+
+
+@app.template_global()
+def img_url(value, subfolder):
+    if not value:
+        return url_for("static", filename="logo.png")
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+    return url_for("static", filename=f"{subfolder}/{value}")
+
 SMTP_EMAIL = os.environ.get("SMTP_EMAIL", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
 
@@ -213,10 +244,7 @@ def add_review(pid):
     image_name = None
     file = request.files.get("review_image")
     if file and file.filename:
-        filename = secure_filename(file.filename)
-        filename = f"r{pid}_{session['user_id']}_{int(datetime.now().timestamp())}_{filename}"
-        file.save(os.path.join(REVIEW_FOLDER, filename))
-        image_name = filename
+        image_name = save_uploaded_image(file, "reviews", REVIEW_FOLDER)
     conn = get_db()
     conn.execute(
         "INSERT INTO reviews (product_id, user_id, rating, comment, image) VALUES (?,?,?,?,?)",
@@ -582,6 +610,28 @@ def my_orders():
     return render_template("orders.html", orders=orders_with_items)
 
 
+@app.route("/orders/<int:order_id>/cancel", methods=["POST"])
+@login_required
+def cancel_order(order_id):
+    conn = get_db()
+    order = conn.execute("SELECT * FROM orders WHERE id=? AND user_id=?", (order_id, session["user_id"])).fetchone()
+    if not order:
+        conn.close()
+        abort(404)
+    if order["status"] != "Placed":
+        flash("This order can no longer be cancelled — it has already been shipped or delivered.", "warning")
+        conn.close()
+        return redirect(url_for("my_orders"))
+    items = conn.execute("SELECT * FROM order_items WHERE order_id=?", (order_id,)).fetchall()
+    for it in items:
+        conn.execute("UPDATE products SET stock = stock + ? WHERE id=?", (it["quantity"], it["product_id"]))
+    conn.execute("UPDATE orders SET status='Cancelled' WHERE id=?", (order_id,))
+    conn.commit()
+    conn.close()
+    flash("Your order has been cancelled.", "success")
+    return redirect(url_for("my_orders"))
+
+
 @app.route("/orders/<int:order_id>/return-request", methods=["POST"])
 @login_required
 def request_return(order_id):
@@ -744,9 +794,7 @@ def _save_product(pid):
     image_name = form.get("existing_image", "")
     file = request.files.get("image_file")
     if file and file.filename:
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        image_name = filename
+        image_name = save_uploaded_image(file, "products", app.config["UPLOAD_FOLDER"])
 
     data = (
         form["name"], form.get("description", ""), form["category"],
@@ -891,9 +939,7 @@ def admin_banner_new():
     if not file or not file.filename:
         flash("Please choose a banner image.", "danger")
         return redirect(url_for("admin_banners"))
-    filename = secure_filename(file.filename)
-    filename = f"{int(datetime.now().timestamp())}_{filename}"
-    file.save(os.path.join(BANNER_FOLDER, filename))
+    filename = save_uploaded_image(file, "banners", BANNER_FOLDER)
     conn = get_db()
     conn.execute(
         "INSERT INTO banners (image, link_url, title, sort_order) VALUES (?,?,?,?)",

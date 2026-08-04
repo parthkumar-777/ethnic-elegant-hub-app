@@ -25,7 +25,7 @@
 <div class="grid">
   {% for b in banners %}
   <div class="card">
-    <div class="img-wrap"><img src="{{ url_for('static', filename='banners/' ~ b['image']) }}"></div>
+    <div class="img-wrap"><img src="{{ img_url(b['image'], 'banners') }}"></div>
     <div class="card-body">
       <h3>{{ b['title'] or '(no title)' }}</h3>
       <p style="font-size:11px; color:#888;">{{ b['link_url'] or 'No link' }}</p>

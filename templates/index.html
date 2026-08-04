@@ -5,7 +5,7 @@
   <div class="banner-track" id="bannerTrack">
     {% for b in banners %}
     <a href="{{ b['link_url'] or '#' }}" class="banner-slide">
-      <img src="{{ url_for('static', filename='banners/' ~ b['image']) }}" alt="{{ b['title'] or 'Banner' }}">
+      <img src="{{ img_url(b['image'], 'banners') }}" alt="{{ b['title'] or 'Banner' }}">
       {% if b['title'] %}<div class="banner-title">{{ b['title'] }}</div>{% endif %}
     </a>
     {% endfor %}
@@ -32,7 +32,7 @@
     {% for p in featured %}
     <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
       <div class="img-wrap" style="position:relative;">
-        <img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}">
+        <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
         {% if p['stock'] <= 0 %}<span style="position:absolute; top:8px; left:8px; background:var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px;">Out of Stock</span>{% endif %}
       </div>
       <div class="card-body">
@@ -56,7 +56,7 @@
     {% for p in products %}
     <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
       <div class="img-wrap" style="position:relative;">
-        <img src="{{ url_for('static', filename='products/' ~ p['image']) }}" alt="{{ p['name'] }}">
+        <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
         {% if p['stock'] <= 0 %}<span style="position:absolute; top:8px; left:8px; background:var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px;">Out of Stock</span>{% endif %}
       </div>
       <div class="card-body">

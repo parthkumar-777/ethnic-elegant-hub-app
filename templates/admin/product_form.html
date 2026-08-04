@@ -52,7 +52,7 @@
     <label>Product Image (upload to replace)</label>
     <input type="file" name="image_file" accept="image/*">
     <input type="hidden" name="existing_image" value="{{ p['image'] if p else '' }}">
-    {% if p %}<img src="{{ url_for('static', filename='products/' ~ p['image']) }}" style="width:80px; margin-top:8px; border-radius:6px;">{% endif %}
+    {% if p %}<img src="{{ img_url(p['image'], 'products') }}" style="width:80px; margin-top:8px; border-radius:6px;">{% endif %}
   </div>
   <div class="form-group">
     <label><input type="checkbox" name="is_featured" style="width:auto;" {% if p and p['is_featured'] %}checked{% endif %}> Show in Featured Collection</label>

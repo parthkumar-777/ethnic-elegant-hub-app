@@ -8,7 +8,7 @@
   <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Featured</th><th>Actions</th></tr>
   {% for p in products %}
   <tr>
-    <td><img src="{{ url_for('static', filename='products/' ~ p['image']) }}" style="width:44px; height:56px; object-fit:cover; border-radius:4px;"></td>
+    <td><img src="{{ img_url(p['image'], 'products') }}" style="width:44px; height:56px; object-fit:cover; border-radius:4px;"></td>
     <td>{{ p['name'] }}</td>
     <td>{{ p['category'] }}</td>
     <td>₹{{ p['price']|int }}</td>

@@ -17,6 +17,12 @@
       <p style="font-size:13px;">{{ it['product_name'] }} (Size: {{ it['size'] }}) × {{ it['quantity'] }} — ₹{{ it['price']|int }}</p>
       {% endfor %}
 
+      {% if o.order['status'] == 'Placed' %}
+      <form method="post" action="{{ url_for('cancel_order', order_id=o.order['id']) }}" onsubmit="return confirm('Cancel this order?');" style="margin-top:8px;">
+        <button type="submit" class="btn btn-danger btn-sm">Cancel Order</button>
+      </form>
+      {% endif %}
+
       {% if o.order['status'] == 'Delivered' %}
         {% if o.return_request %}
         <hr>
