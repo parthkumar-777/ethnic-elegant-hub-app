@@ -852,6 +852,11 @@ def admin_orders():
 def admin_order_status(oid):
     status = request.form["status"]
     conn = get_db()
+    current = conn.execute("SELECT status FROM orders WHERE id=?", (oid,)).fetchone()
+    if current and current["status"] == "Cancelled" and status != "Cancelled":
+        flash("This order was cancelled and its stock already refunded — status can't be changed further.", "warning")
+        conn.close()
+        return redirect(url_for("admin_orders"))
     if status == "Delivered":
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn.execute(
