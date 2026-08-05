@@ -30,7 +30,13 @@
   <h2>Featured Collection</h2>
   <div class="grid">
     {% for p in featured %}
-    <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
+    <div class="card" style="position:relative;">
+      {% if current_user %}
+      <form action="{{ url_for('wishlist_toggle', pid=p['id']) }}" method="post" style="position:absolute; top:8px; right:8px; z-index:5;">
+        <button type="submit" class="heart-btn {{ 'active' if p['id'] in wishlist_ids }}">{{ '❤️' if p['id'] in wishlist_ids else '🤍' }}</button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('product_detail', pid=p['id']) }}" style="display:block; color:inherit; text-decoration:none;">
       <div class="img-wrap" style="position:relative;">
         <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
         {% if p['stock'] <= 0 %}<span style="position:absolute; top:8px; left:8px; background:var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px;">Out of Stock</span>{% endif %}
@@ -44,7 +50,8 @@
           <span class="discount">{{ ((1 - p['price']/p['mrp'])*100)|round|int }}% off</span>
         </div>
       </div>
-    </a>
+      </a>
+    </div>
     {% endfor %}
   </div>
 </div>
@@ -54,7 +61,13 @@
   <h2>All Products</h2>
   <div class="grid">
     {% for p in products %}
-    <a href="{{ url_for('product_detail', pid=p['id']) }}" class="card">
+    <div class="card" style="position:relative;">
+      {% if current_user %}
+      <form action="{{ url_for('wishlist_toggle', pid=p['id']) }}" method="post" style="position:absolute; top:8px; right:8px; z-index:5;">
+        <button type="submit" class="heart-btn {{ 'active' if p['id'] in wishlist_ids }}">{{ '❤️' if p['id'] in wishlist_ids else '🤍' }}</button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('product_detail', pid=p['id']) }}" style="display:block; color:inherit; text-decoration:none;">
       <div class="img-wrap" style="position:relative;">
         <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
         {% if p['stock'] <= 0 %}<span style="position:absolute; top:8px; left:8px; background:var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px;">Out of Stock</span>{% endif %}
@@ -68,7 +81,8 @@
           <span class="discount">{{ ((1 - p['price']/p['mrp'])*100)|round|int }}% off</span>
         </div>
       </div>
-    </a>
+      </a>
+    </div>
     {% endfor %}
   </div>
 </div>

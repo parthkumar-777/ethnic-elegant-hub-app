@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container section" style="max-width:760px;">
+  <h2>Terms &amp; Conditions</h2>
+  <div class="cart-summary">
+    <p style="color:#888; font-size:12px;">Last updated: 2026</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">General</h3>
+    <p style="line-height:1.8; color:#444;">By accessing and using Ethnic Elegant Hub, you agree to be bound by these Terms & Conditions. Please read them carefully before placing an order.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Orders & Payment</h3>
+    <p style="line-height:1.8; color:#444;">All orders are subject to product availability. Prices are listed in Indian Rupees (₹) and may change without prior notice. Payment must be completed through the accepted payment methods at checkout.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Shipping</h3>
+    <p style="line-height:1.8; color:#444;">We aim to dispatch orders promptly, but delivery timelines may vary based on location and courier availability. Ethnic Elegant Hub is not responsible for delays caused by circumstances beyond our control.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Returns & Refunds</h3>
+    <p style="line-height:1.8; color:#444;">Return requests can be raised from your order history after delivery. Once approved, refunds are processed to the original payment method or as store credit, as applicable.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Product Information</h3>
+    <p style="line-height:1.8; color:#444;">We strive to display product colors and details as accurately as possible. Slight variations may occur due to photography lighting and individual screen settings.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Changes to These Terms</h3>
+    <p style="line-height:1.8; color:#444;">We may update these Terms & Conditions from time to time. Continued use of the website after changes constitutes acceptance of the revised terms.</p>
+    <h3 style="color:var(--maroon); margin-top:16px;">Contact Us</h3>
+    <p style="line-height:1.8; color:#444;">For any questions regarding these terms, please visit our <a href="{{ url_for('contact') }}" style="color:var(--maroon); font-weight:600;">Contact Us</a> page.</p>
+  </div>
+</div>
+{% endblock %}

@@ -3,8 +3,13 @@
 {% block content %}
 <div class="container">
   <div class="product-detail">
-    <div class="img-wrap">
+    <div class="img-wrap" style="position:relative;">
       <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
+      {% if current_user %}
+      <form action="{{ url_for('wishlist_toggle', pid=p['id']) }}" method="post" style="position:absolute; top:12px; right:12px;">
+        <button type="submit" class="heart-btn {{ 'active' if in_wishlist }}">{{ '❤️' if in_wishlist else '🤍' }}</button>
+      </form>
+      {% endif %}
     </div>
     <div>
       <h1>{{ p['name'] }}</h1>
@@ -40,11 +45,6 @@
           <button type="submit" name="action" value="buy" class="btn btn-primary" {% if p['stock'] <= 0 %}disabled{% endif %}>{{ 'Out of Stock' if p['stock'] <= 0 else 'Buy Now' }}</button>
         </div>
       </form>
-      {% if current_user %}
-      <form action="{{ url_for('wishlist_remove' if in_wishlist else 'wishlist_add', pid=p['id']) }}" method="post" style="margin-top:10px;">
-        <button type="submit" class="btn btn-outline">{{ '💔 Remove from Wishlist' if in_wishlist else '❤️ Add to Wishlist' }}</button>
-      </form>
-      {% endif %}
       <p style="margin-top:16px; font-size:12px; color:#999;">In stock: {{ p['stock'] }} units · Cash on Delivery available</p>
     </div>
   </div>

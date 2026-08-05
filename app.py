@@ -151,10 +151,19 @@ def cart_count():
     return sum(item["qty"] for item in get_cart().values())
 
 
+def get_wishlist_ids():
+    if not session.get("user_id"):
+        return set()
+    conn = get_db()
+    rows = conn.execute("SELECT product_id FROM wishlist WHERE user_id=?", (session["user_id"],)).fetchall()
+    conn.close()
+    return {r["product_id"] for r in rows}
+
+
 @app.context_processor
 def inject_globals():
     return dict(current_user=current_user(), categories=CATEGORIES,
-                cart_count=cart_count())
+                cart_count=cart_count(), wishlist_ids=get_wishlist_ids())
 
 
 # ---------- storefront ----------
@@ -294,6 +303,22 @@ def wishlist_remove(pid):
     conn.close()
     flash("Removed from wishlist.", "info")
     return redirect(request.referrer or url_for("wishlist"))
+
+
+@app.route("/wishlist/toggle/<int:pid>", methods=["POST"])
+@login_required
+def wishlist_toggle(pid):
+    conn = get_db()
+    existing = conn.execute(
+        "SELECT id FROM wishlist WHERE user_id=? AND product_id=?", (session["user_id"], pid)
+    ).fetchone()
+    if existing:
+        conn.execute("DELETE FROM wishlist WHERE id=?", (existing["id"],))
+    else:
+        conn.execute("INSERT INTO wishlist (user_id, product_id) VALUES (?,?)", (session["user_id"], pid))
+    conn.commit()
+    conn.close()
+    return redirect(request.referrer or url_for("index"))
 
 
 @app.route("/categories")
@@ -688,6 +713,21 @@ def contact():
             return redirect(url_for("contact"))
         flash("Please fill in all fields.", "warning")
     return render_template("contact.html")
+
+
+@app.route("/privacy-policy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@app.route("/terms-conditions")
+def terms():
+    return render_template("terms.html")
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
 
 
 # ---------- admin ----------

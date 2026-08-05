@@ -5,7 +5,10 @@
   {% if products %}
   <div class="grid">
     {% for p in products %}
-    <div class="card">
+    <div class="card" style="position:relative;">
+      <form action="{{ url_for('wishlist_toggle', pid=p['id']) }}" method="post" style="position:absolute; top:8px; right:8px; z-index:5;">
+        <button type="submit" class="heart-btn active">❤️</button>
+      </form>
       <a href="{{ url_for('product_detail', pid=p['id']) }}">
         <div class="img-wrap" style="position:relative;">
           <img src="{{ img_url(p['image'], 'products') }}" alt="{{ p['name'] }}">
@@ -20,9 +23,6 @@
           </div>
         </div>
       </a>
-      <form action="{{ url_for('wishlist_remove', pid=p['id']) }}" method="post" style="padding:0 8px 10px;">
-        <button type="submit" class="btn btn-outline btn-sm btn-block">💔 Remove</button>
-      </form>
     </div>
     {% endfor %}
   </div>
