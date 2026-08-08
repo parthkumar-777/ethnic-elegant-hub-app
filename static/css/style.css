@@ -87,6 +87,15 @@ img{max-width:100%; display:block;}
 }
 .heart-btn:hover{transform:scale(1.1);}
 .heart-btn.active{background:#fff;}
+
+/* ---------- Toast Notification ---------- */
+.eeh-toast{
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--charcoal); color:#fff; padding:10px 20px; border-radius:24px;
+  font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.25);
+  z-index:500; opacity:0; transition:opacity .3s, transform .3s; pointer-events:none;
+}
+.eeh-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 .price-row{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
 .price{font-size:16px; font-weight:700; color:var(--charcoal);}
 .mrp{font-size:12px; color:#888; text-decoration:line-through;}
