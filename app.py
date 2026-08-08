@@ -1,7 +1,7 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from collections import defaultdict
 from flask import (Flask, render_template, request, redirect, url_for,
@@ -12,6 +12,7 @@ from db import get_db, init_db
 
 app = Flask(__name__)
 app.secret_key = "eeh-dev-secret-change-in-production-please"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365)
 UPLOAD_FOLDER = os.path.join(app.static_folder, "products")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 BANNER_FOLDER = os.path.join(app.static_folder, "banners")
@@ -407,6 +408,7 @@ def signup():
         user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
         conn.close()
         session["user_id"] = user["id"]
+        session.permanent = True
         flash(f"Welcome to Ethnic Elegant Hub, {name}!", "success")
         return redirect(url_for("index"))
     return render_template("signup.html")
@@ -422,6 +424,7 @@ def login():
         conn.close()
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
+            session.permanent = True
             flash(f"Welcome back, {user['name']}!", "success")
             nxt = request.args.get("next")
             if user["is_admin"] and nxt is None:
